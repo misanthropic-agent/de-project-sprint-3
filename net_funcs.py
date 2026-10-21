@@ -17,27 +17,21 @@ def generate_headers(
     }
 
 def post_generate_report(
-        nick: str = 'arthur',
-        cohort: str = '0',
-        project: str = 'True',
-        apikey: str = '5f55e6c0-e9e5-4a9c-b313-63c01fc31460',
-        url: str = 'https://d5dg1j9kt695d30blp03.apigw.yandexcloud.net/generate_report'
+        headers: dict,
+        url: str = 'https://d5dg1j9kt695d30blp03.apigw.yandexcloud.net'
         ) -> tuple[int, str]:
 
-    response = requests.post(url, headers=generate_headers(nick, cohort, project, apikey))
-    return response.status_code, response.json()
+    response = requests.post(url + '/generate_report', headers=headers)
+    return response.json()
 
 
 def get_generated_report(
         task_id: str,
-        nick: str = 'arthur',
-        cohort: str = '0',
-        project: str = 'True',
-        apikey: str = '5f55e6c0-e9e5-4a9c-b313-63c01fc31460',
-        url: str = 'https://d5dg1j9kt695d30blp03.apigw.yandexcloud.net/get_report?task_id='
+        headers: dict,
+        url: str = 'https://d5dg1j9kt695d30blp03.apigw.yandexcloud.net'
     ):
-    response = requests.get(url + task_id, headers=generate_headers(nick, cohort, project, apikey))
-    return  response.status_code, response.json()
+    response = requests.get(url + '/get_report?task_id=' + task_id, headers=headers)
+    return  response.json()
 
 def get_files(
         report_id: str,
@@ -45,15 +39,14 @@ def get_files(
         path: str = './data/',
         nick: str = 'arthur',
         cohort: str = '0',
+        files: str = (
+            'customer_research.csv',
+            'user_order_log.csv',
+            'user_activity_log.csv',
+            'price_log.csv',
+        ),
         url: str = 'https://storage.yandexcloud.net/s3-sprint3/cohort_$cohort/$nick/project/$report_id/$file_name'    
     ):
-
-    files = (
-    'customer_research.csv',
-    'user_order_log.csv',
-    'user_activity_log.csv',
-    'price_log.csv',
-    )
 
     fmt_url = url.replace('$nick', nick).replace('$cohort', cohort).replace('$report_id', report_id)
 
@@ -65,16 +58,3 @@ def get_files(
 
 def transform():
     ...
-
-#_, response = post_generate_report()
-
-task_id='MjAyNi0xMC0xOVQxMzo1NzoyOAlhcnRodXI='
-
-#_, response = get_generated_report(response['task_id'])
-
-
-report_id = 'TWpBeU5pMHhNQzB4T1ZReE16bzBNem95TmdsaGNuUm9kWEk9'
-
-#_, response = get_generated_redocker psport(task_id)
-
-get_files(report_id)
