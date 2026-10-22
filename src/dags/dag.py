@@ -17,6 +17,8 @@ from net_funcs import (
     transform
 )
 
+path = 'data/'
+
 files = (
     'customer_research.csv',
     'user_order_log.csv',
@@ -35,11 +37,11 @@ headers = generate_headers(
     apikey='5f55e6c0-e9e5-4a9c-b313-63c01fc31460'
 )
 
-def task_post_gr(ti: TaskInstance):
+def post_gr(ti: TaskInstance):
     task_id = post_generate_report(headers).get('task_id')
     ti.xcom_push('task_id', task_id)
 
-def task_get_gr(ti: TaskInstance):
+def get_gr(ti: TaskInstance):
     status = ''
     while status != 'SUCCESS':
         response = get_generated_report(ti.xcom_pull(key='task_id'), headers, url=cloud_url)
@@ -48,11 +50,11 @@ def task_get_gr(ti: TaskInstance):
     report_id = response['data']['report_id']
     ti.xcom_push('report_id', report_id)
 
-def get_fs_incr(ti: TaskInstance):
+def task_get_fs_incr(ti: TaskInstance):
     dfs = get_files(ti.xcom_pull(key='report_id'), date=..., nick=headers['nick'], cohort=headers['cohort'], url=s3_url)
-    for df in dfs:
+    for file_name, df in dfs:
         transformed_df = transform(df)
-        transformed_df.to_sql()
+        transformed_df.to_csv(path + file_name)
 
 
 args = {
@@ -74,7 +76,25 @@ with DAG \
         end_date=datetime.today() - timedelta(days=1),
     ) as dag:
 
+    task_generate_report = PythonOperator(
+        python_callable=post_gr
+        )
+    
+    task_get_generated_report = PythonOperator(
+            python_callable=get_gr
+            )
+
+    task_incr = PythonOperator(
+        python_callable=task_get_fs_incr
+    )
+
+    
+
+    
+
+        
+
     post_generate_report \
         >> get_generated_report \
-        >> get_fs_incr \
+        >> task_get_fs_incr \
         >> []

@@ -56,7 +56,7 @@ def get_files(
 
     for file in files:
         df = pd.read_csv(fmt_url.replace('$file_name', file))
-        yield df
+        yield file, df
 
         
 
