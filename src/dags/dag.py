@@ -1,15 +1,20 @@
-from airflow import DAG
-from airflow.providers.standard.operators.python import PythonOperator
-from airflow.models import TaskInstance
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from time import sleep
-import pandas
 from datetime import datetime, timedelta
+from time import sleep
+
+import pandas
+from airflow import DAG
+from airflow.hooks.http_hook import HttpHook
+from airflow.models import TaskInstance
+from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.postgres.operators.postgres import PostgresOperator
+
 from net_funcs import (
     generate_headers,
     get_files,
+    get_generated_report,
     post_generate_report,
-    get_generated_report
+    transform
 )
 
 files = (
@@ -43,8 +48,12 @@ def task_get_gr(ti: TaskInstance):
     report_id = response['data']['report_id']
     ti.xcom_push('report_id', report_id)
 
-def download_fs_incr(ti: TaskInstance):
-    get_files(ti.xcom_pull(key='report_id'), )
+def get_fs_incr(ti: TaskInstance):
+    dfs = get_files(ti.xcom_pull(key='report_id'), date=..., nick=headers['nick'], cohort=headers['cohort'], url=s3_url)
+    for df in dfs:
+        transformed_df = transform(df)
+        transformed_df.to_sql()
+
 
 args = {
     "owner": "student",
@@ -63,4 +72,9 @@ with DAG \
         catchup=True,
         start_date=datetime.today() - timedelta(days=7),
         end_date=datetime.today() - timedelta(days=1),
-    ):
+    ) as dag:
+
+    post_generate_report \
+        >> get_generated_report \
+        >> get_fs_incr \
+        >> []

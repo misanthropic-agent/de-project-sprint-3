@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
-import time
+import io
+from collections.abc import Generator
 
 def generate_headers(
     nick,
@@ -35,8 +36,7 @@ def get_generated_report(
 
 def get_files(
         report_id: str,
-        date: str ='*',
-        path: str = './data/',
+        date: str ='',
         nick: str = 'arthur',
         cohort: str = '0',
         files: str = (
@@ -46,15 +46,23 @@ def get_files(
             'price_log.csv',
         ),
         url: str = 'https://storage.yandexcloud.net/s3-sprint3/cohort_$cohort/$nick/project/$report_id/$file_name'    
-    ):
+    ) -> Generator:
 
     fmt_url = url.replace('$nick', nick).replace('$cohort', cohort).replace('$report_id', report_id)
 
-    if date != '*':
-        fmt_url += f'&sdate={date}'
+    if date != '':
+        fmt_url += f'&date={date}'
+
 
     for file in files:
-        pd.read_csv(fmt_url.replace('$file_name', file)).to_csv(path + file)
+        df = pd.read_csv(fmt_url.replace('$file_name', file))
+        yield df
 
-def transform():
-    ...
+        
+
+def transform(df: pd.DataFrame):
+    if 'status' not in df.columns:
+        df['status'] = 'shipped'
+    df = df.drop('id', axis=1)
+    df = df.drop_duplicates(['uniq_id'])
+    return df

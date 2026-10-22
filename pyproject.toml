@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "apache-airflow==2.3.0",
+    "apache-airflow-providers-http>=4.3.0",
+    "apache-airflow-providers-postgres>=5.4.0",
     "pandas>=3.0.6",
     "requests>=2.34.2",
 ]
