@@ -47,6 +47,9 @@ def get_report(ti):
 
     for i in range(20):
         response = requests.get(f'{base_url}/get_report?task_id={task_id}', headers=headers)
+        if response.status_code >= 500:
+            time.sleep(10)
+            continue
         response.raise_for_status()
         print(f'Response is {response.content}')
         status = json.loads(response.content)['status']
