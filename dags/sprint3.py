@@ -19,6 +19,7 @@ postgres_conn_id = 'postgresql_de'
 nickname = 'Arthur'
 cohort = '1'
 
+
 headers = {
     'X-Nickname': nickname,
     'X-Cohort': cohort,
